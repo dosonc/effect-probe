@@ -20,8 +20,8 @@ There is currently no bug bounty or guaranteed response-time service level.
 
 ## Security boundary
 
-EffectProbe is intended to execute trusted local test subjects and isolate only
-declared test state. It is not a sandbox for malicious or untrusted code.
+EffectProbe is intended to execute trusted local test subjects against
+case-provisioned test state. It is not a sandbox for malicious or untrusted code.
 
 Examples of issues that are in scope include EffectProbe introducing command or
 environment injection, escaping a declared path boundary, persisting unsafe data,

@@ -89,6 +89,7 @@ they submit.
 
 ## Project boundaries
 
-EffectProbe runs trusted local test subjects and isolates declared test state; it is
-not a security sandbox. Tests and reports must describe their observed surfaces and
-must not imply that a harness-controlled dependency validates production behavior.
+EffectProbe runs trusted local test subjects against case-provisioned test state; it
+is not a security sandbox. Tests and reports must describe their observed surfaces
+and must not imply that a harness-controlled dependency validates production
+behavior.

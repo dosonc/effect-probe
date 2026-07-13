@@ -1,0 +1,50 @@
+name: Feature proposal
+description: Propose an outcome or use case for EffectProbe.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Describe the user problem and why existing tests are insufficient.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe observable success without prescribing an implementation when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include workarounds or narrower approaches you considered.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Most relevant area
+      options:
+        - Core semantics
+        - Fault injection
+        - Effect observation
+        - MCP integration
+        - Durable runtime integration
+        - Reporting and CI
+        - Documentation and onboarding
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and evidence impact
+      description: Note any new subject capabilities, effect surfaces, failure schedules, or claims this may require.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues and proposals for related work.
+          required: true

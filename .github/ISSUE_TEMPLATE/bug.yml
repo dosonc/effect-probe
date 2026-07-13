@@ -1,0 +1,60 @@
+name: Bug report
+description: Report reproducible incorrect behavior in EffectProbe.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve EffectProbe.
+
+        Do not disclose security vulnerabilities or secrets here. Follow the repository's security policy instead.
+  - type: input
+    id: version
+    attributes:
+      label: EffectProbe version or commit
+      description: Give the installed version or full commit SHA.
+      placeholder: main at 0123456789abcdef...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Python version, operating system, architecture, and installation method.
+      placeholder: Python 3.12, Ubuntu 24.04 x86_64, uv sync
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide the smallest self-contained sequence that reproduces the behavior.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs or artifacts
+      description: Remove credentials, tokens, personal data, and sensitive payloads before posting.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed secrets and sensitive data from this report.
+          required: true

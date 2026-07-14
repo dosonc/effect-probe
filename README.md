@@ -20,14 +20,15 @@ or durable agent to charge, refund, create, send, update, or delete twice.
 
 ## Current state
 
-The repository currently contains the Python package skeleton and its development,
-quality, contribution, and CI foundations. It does not yet execute subjects,
-inject failures, observe external effects, or produce verdicts.
+The repository now contains a private, test-driven vertical slice that executes a
+trusted local refund subject, loses one provider result at a cooperative boundary,
+and observes a fake provider's current state and append-only history. It does not
+yet expose a usable fault-injection API, CLI, or alpha verdict layer.
 
-The first implementation milestone is a deterministic vulnerable-versus-corrected
-refund example with a fake local provider. Passing against a harness-controlled
-provider will demonstrate the testing method; it will not validate the semantics
-of a production payment provider.
+The next implementation milestone is the semantic kernel and a corrected comparison
+case using fresh clean and perturbed worlds. The current vulnerable example
+demonstrates the testing method against a harness-controlled provider; it does not
+validate the semantics of a production payment provider.
 
 ## Design documentation
 

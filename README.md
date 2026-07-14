@@ -12,8 +12,8 @@ successfully while its result is lost, causing retry or checkpoint resume to
 perform it again.
 
 EffectProbe aims to reproduce supported ambiguous outcomes deterministically and
-verify whether declared external-state invariants still hold after retry or
-checkpoint resume.
+evaluate declared external-state invariants in recorded clean and perturbed trials
+across retry or checkpoint resume.
 
 Its first concrete target is detecting when a lost result causes a local MCP tool
 or durable agent to charge, refund, create, send, update, or delete twice.
@@ -29,27 +29,36 @@ refund example with a fake local provider. Passing against a harness-controlled
 provider will demonstrate the testing method; it will not validate the semantics
 of a production payment provider.
 
+## Design documentation
+
+- [Alpha claim boundaries](docs/claim-boundaries.md) defines the permitted meaning
+  of verdicts and the evidence scope required for every evaluative conclusion.
+- [ADR-0001](docs/adr/0001-alpha-scope-and-claim-boundaries.md) records why the alpha
+  deliberately adopts those boundaries.
+
 ## Planned alpha scope
 
-- Trusted local subjects and isolated test state.
+- Trusted local subjects and case-provisioned isolated test state.
 - MCP stdio as the first supported integration.
 - One logical operation, no more than two attempts, one injected failure, and no
   concurrent schedule exploration.
-- Clean-versus-perturbed execution from equivalent seeded worlds.
+- Clean-versus-perturbed execution matched on declared, canonicalized baseline
+  surfaces.
 - Deterministic duplicate delivery and commit-then-lose-result scenarios.
 - Declared state surfaces and append-only committed-effect histories.
 - Clean functional postconditions separated from retry-safety invariants.
-- `PASS`, `FAIL`, `INCONCLUSIVE`, and `ERROR` verdicts with explicit evidence
-  limitations.
-- Replay from saved concrete inputs and schedules under a compatible environment.
+- `PASS`, `FAIL`, `INCONCLUSIVE`, and `ERROR` invariant verdicts, plus explicit
+  `UNVERIFIED` clean validity when no clean assertions were declared.
+- Strict replay from explicitly replayable artifacts under a compatible environment.
 - Experimental property-generated inputs and LangGraph checkpoint/resume support.
 - Local and CI execution without LLM calls, paid APIs, or production credentials.
 
 ## Scope and safety boundaries
 
-> EffectProbe requires trusted subjects and isolates only declared test state. It
-> is not a security sandbox. A passing result applies only to the tested inputs,
-> observer coverage, environment, invariants, and failure schedules.
+> EffectProbe requires trusted subjects and operates on case-provisioned test state.
+> It is not a security sandbox. An evaluative conclusion applies only to the
+> recorded inputs, observer coverage, environment, invariants, and failure
+> schedules.
 
 EffectProbe does not aim to:
 
@@ -65,10 +74,12 @@ EffectProbe does not aim to:
 - Claim that fake dependencies reproduce production semantics.
 - Provide stable third-party extension compatibility during `0.x`.
 
-The intended passing statement is deliberately narrow:
+The intended passing statement is deliberately scoped and axis-specific:
 
-> No invariant violation was observed within this test's declared inputs,
-> evidence surfaces, environment, and supported failure schedule.
+> `retry_safety=PASS`: Every declared retry invariant evaluated `PASS` for the
+> applicable recorded input and scenario pairs, using evidence declared sufficient
+> for each invariant. This conclusion is limited to the recorded subject, contract,
+> inputs, environment, observer coverage, and failure schedules.
 
 ## Core terminology
 
@@ -77,14 +88,16 @@ The intended passing statement is deliberately narrow:
 - **Logical operation:** the business action intended to happen once.
 - **Attempt:** one concrete execution of a logical operation.
 - **Delivery:** one transport-level delivery, distinct from the logical operation.
-- **Operation key:** the domain idempotency key supplied or observed in arguments.
+- **Operation key:** an optional domain idempotency key explicitly selected from
+  subject-visible data by user configuration and recorded, but never injected, by
+  EffectProbe.
 - **Effect surface:** named external state inspected by an observer.
 - **State evidence:** projected state at a point in time.
 - **History evidence:** append-only committed effects, required to detect transient
   duplicates that final state alone can hide.
 - **Clean trial:** one normal execution.
-- **Perturbed trial:** an equivalent initial world plus a supported injected failure
-  and recovery.
+- **Perturbed trial:** a fresh world matched to the clean trial on declared,
+  canonicalized baseline surfaces, plus a supported injected failure and recovery.
 - **Evidence sufficiency:** whether configured observers can justify a particular
   invariant.
 - **Harness truth:** information known by the test harness but unavailable to the

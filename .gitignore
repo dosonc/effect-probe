@@ -21,6 +21,9 @@ htmlcov/
 # EffectProbe run artifacts
 .effectprobe/
 
+# Private agent plans and workflow artifacts
+.local/
+
 # Local configuration and secrets
 .env
 .env.*

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run EffectProbe PR"
+  short_description: "Plan, implement, verify, and prepare one PR"
+  default_prompt: "Use $run-effectprobe-pr to turn the active EffectProbe work item into an approved plan, verified implementation, and authorized pull request."

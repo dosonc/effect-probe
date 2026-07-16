@@ -21,7 +21,10 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+    "anyio>=4.5,<5",
+    "mcp>=1.28.1,<2",
+]
 
 [project.urls]
 Documentation = "https://github.com/dosonc/effect-probe#readme"

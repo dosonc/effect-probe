@@ -31,8 +31,16 @@ key identities.
 This kernel is deliberately private and its provisional scope is not reportable:
 environment, code, and version fingerprints are deferred. The examples demonstrate
 the testing semantics against a harness-controlled provider; they do not validate
-the behavior of a production payment provider or expose a usable fault-injection
-API, CLI, or stable verdict/report schema.
+the behavior of a production payment provider.
+
+The current private transport slice runs the same vulnerable and keyed comparison
+through a trusted local MCP stdio server. It preflights the declared tool capability,
+keeps one managed subprocess alive across the perturbed calls, and loses the first
+validated client result at an explicit cooperative boundary. Fresh SQLite worlds
+provide current state and append-only committed history; MCP request identities are
+recorded separately and are never treated as logical operations or domain keys. This
+slice still does not expose a usable fault-injection API, CLI, stable verdict/report
+schema, or general MCP-server integration.
 
 ## Design documentation
 

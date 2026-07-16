@@ -47,7 +47,30 @@ class AttemptIdentity:
     attempt_id: AttemptId
 
 
-type AttemptOutcome = Literal["provider_result_lost", "returned"]
+type LostResultOutcome = Literal["provider_result_lost", "client_result_lost"]
+type AttemptOutcome = Literal["provider_result_lost", "client_result_lost", "returned"]
+
+
+@dataclass(frozen=True, slots=True)
+class LostResultSchedule:
+    """Private description of one cooperative lost-result schedule."""
+
+    scope_name: str
+    boundary_name: str
+    lost_outcome: LostResultOutcome
+
+
+PROVIDER_RESULT_LOSS = LostResultSchedule(
+    scope_name="provider_commit_then_lose_first_result_and_retry_once",
+    boundary_name="provider_result_delivery",
+    lost_outcome="provider_result_lost",
+)
+
+MCP_CLIENT_RESULT_LOSS = LostResultSchedule(
+    scope_name="mcp_tool_completion_then_lose_first_client_result_and_retry_once",
+    boundary_name="mcp_client_result_delivery",
+    lost_outcome="client_result_lost",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,18 +112,20 @@ class BoundaryNotReached(RuntimeError):
     invariant being inconclusive; it is not evidence of an invariant violation.
     """
 
-    def __init__(self, identity: AttemptIdentity) -> None:
+    def __init__(self, identity: AttemptIdentity, boundary_name: str) -> None:
         self.identity = identity
-        super().__init__(f"provider-result boundary was not reached by {identity.attempt_id.value}")
+        self.boundary_name = boundary_name
+        super().__init__(f"{boundary_name} was not reached by {identity.attempt_id.value}")
 
 
 class FaultNotPropagated(RuntimeError):
     """The fault was injected, but its signal did not escape the invocation."""
 
-    def __init__(self, identity: AttemptIdentity) -> None:
+    def __init__(self, identity: AttemptIdentity, boundary_name: str) -> None:
         self.identity = identity
+        self.boundary_name = boundary_name
         super().__init__(
-            f"provider-result loss was caught before leaving {identity.attempt_id.value}"
+            f"{boundary_name} loss was caught before leaving {identity.attempt_id.value}"
         )
 
 
@@ -118,7 +143,8 @@ _DEFAULT_TRIAL_ID = TrialId("perturbed")
 class _ResultDeliveryController[ResultT]:
     """Lose the payload at the first cooperative provider-result boundary."""
 
-    def __init__(self) -> None:
+    def __init__(self, schedule: LostResultSchedule) -> None:
+        self._schedule = schedule
         self._reached_attempt_ids: list[AttemptId] = []
         self._injected_attempt_id: AttemptId | None = None
         self._undelivered_result: ResultT | None = None
@@ -179,8 +205,9 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
     observe: Callable[[], ObservationT],
     trial_id: TrialId = _DEFAULT_TRIAL_ID,
     baseline: ObservationT | object = _MISSING_BASELINE,
+    schedule: LostResultSchedule = PROVIDER_RESULT_LOSS,
 ) -> RunEvidence[ResultT, ObservationT]:
-    """Run one invocation, lose its provider result, and retry exactly once.
+    """Run one invocation, lose its configured result, and retry exactly once.
 
     The subject receives only the cooperative result-delivery callback. Logical,
     delivery, and attempt identities remain harness evidence and cannot become an
@@ -190,7 +217,7 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
     recorded_baseline = (
         observe() if baseline is _MISSING_BASELINE else cast("ObservationT", baseline)
     )
-    controller = _ResultDeliveryController[ResultT]()
+    controller = _ResultDeliveryController[ResultT](schedule)
     first_identity = identity_for(operation_id, trial_id, 1)
 
     try:
@@ -199,8 +226,8 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
         after_lost_result = observe()
     else:
         if controller.injected:
-            raise FaultNotPropagated(first_identity)
-        raise BoundaryNotReached(first_identity)
+            raise FaultNotPropagated(first_identity, schedule.boundary_name)
+        raise BoundaryNotReached(first_identity, schedule.boundary_name)
 
     second_identity = identity_for(operation_id, trial_id, 2)
     subject_result = invoke(controller.delivery_for(second_identity.attempt_id))
@@ -208,7 +235,7 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
 
     first_attempt = AttemptEvidence[ResultT, ObservationT](
         identity=first_identity,
-        outcome="provider_result_lost",
+        outcome=schedule.lost_outcome,
         observation=after_lost_result,
         returned_result=None,
     )
@@ -219,7 +246,7 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
         returned_result=subject_result,
     )
     harness_evidence = HarnessEvidence(
-        boundary_name="provider_result_delivery",
+        boundary_name=schedule.boundary_name,
         reached_attempt_ids=controller.reached_attempt_ids,
         injected_attempt_id=controller.injected_attempt_id,
         undelivered_result=controller.undelivered_result,

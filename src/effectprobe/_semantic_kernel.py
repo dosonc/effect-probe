@@ -11,9 +11,11 @@ from types import TracebackType
 from typing import Literal, cast
 
 from effectprobe._lost_result import (
+    PROVIDER_RESULT_LOSS,
     AttemptEvidence,
     BoundaryNotReached,
     FaultNotPropagated,
+    LostResultSchedule,
     OperationId,
     RunEvidence,
     TrialId,
@@ -287,6 +289,8 @@ class CaseDefinition[InputT, ResultT, StateT, EventT, CanonicalStateT, Canonical
     clean_assertions: tuple[CleanAssertion[InputT, ResultT, StateT, EventT], ...]
     retry_invariants: tuple[RetryInvariant[InputT, ResultT, StateT, EventT, CanonicalEventT], ...]
     scope_limitations: tuple[str, ...]
+    schedule: LostResultSchedule = PROVIDER_RESULT_LOSS
+    preflight: Callable[[], None] = lambda: None
 
 
 @dataclass(frozen=True, slots=True)
@@ -316,6 +320,14 @@ class CaseResult[InputT, ResultT, StateT, EventT]:
 
 class CaseConfigurationError(ValueError):
     """The private case cannot express the required retry evaluation."""
+
+
+class CasePreflightError(RuntimeError):
+    """A private report-level preflight failed before trial axes existed."""
+
+    def __init__(self, cause: Exception) -> None:
+        self.cause = cause
+        super().__init__(str(cause))
 
 
 def _error(axis: Literal["clean", "retry"], phase: str, error: BaseException) -> ErrorRecord:
@@ -571,6 +583,7 @@ def _run_perturbed[InputT, ResultT, StateT, EventT, CanonicalStateT, CanonicalEv
                 baseline=baseline,
                 invoke=lambda deliver: world.invoke(case.input, deliver),
                 observe=world.observe,
+                schedule=case.schedule,
             )
             final = run.attempts[-1].observation
             stage = "history_validation"
@@ -786,12 +799,16 @@ def evaluate_case[InputT, ResultT, StateT, EventT, CanonicalStateT, CanonicalEve
 
     if not case.retry_invariants:
         raise CaseConfigurationError("a private case requires at least one retry invariant")
+    try:
+        case.preflight()
+    except Exception as error:
+        raise CasePreflightError(error) from error
     scope = PrivateScope(
         subject_name=case.subject_name,
         input=case.input,
         operation_id=case.operation_id,
         operation_key=case.operation_key_selector(case.input),
-        schedule="provider_commit_then_lose_first_result_and_retry_once",
+        schedule=case.schedule.scope_name,
         coverage=case.coverage,
         reportable=False,
         limitations=case.scope_limitations,

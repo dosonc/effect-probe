@@ -20,15 +20,19 @@ or durable agent to charge, refund, create, send, update, or delete twice.
 
 ## Current state
 
-The repository now contains a private, test-driven vertical slice that executes a
-trusted local refund subject, loses one provider result at a cooperative boundary,
-and observes a fake provider's current state and append-only history. It does not
-yet expose a usable fault-injection API, CLI, or alpha verdict layer.
+The repository now contains a private, test-driven semantic slice that evaluates
+fresh clean and perturbed refund worlds. Its vulnerable subject ignores a selected
+operation key and produces `clean_validity=PASS`, `retry_safety=FAIL`; its corrected
+subject forwards that key to a deduplicating fake provider and produces
+`clean_validity=PASS`, `retry_safety=PASS`. The comparison records current state,
+append-only history, and distinct operation, trial, delivery, attempt, and subject
+key identities.
 
-The next implementation milestone is the semantic kernel and a corrected comparison
-case using fresh clean and perturbed worlds. The current vulnerable example
-demonstrates the testing method against a harness-controlled provider; it does not
-validate the semantics of a production payment provider.
+This kernel is deliberately private and its provisional scope is not reportable:
+environment, code, and version fingerprints are deferred. The examples demonstrate
+the testing semantics against a harness-controlled provider; they do not validate
+the behavior of a production payment provider or expose a usable fault-injection
+API, CLI, or stable verdict/report schema.
 
 ## Design documentation
 

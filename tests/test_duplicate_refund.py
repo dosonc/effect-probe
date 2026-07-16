@@ -193,8 +193,8 @@ def test_lost_provider_result_causes_a_duplicate_refund() -> None:
 
     first, second = run.attempts
     assert first.identity.operation_id == run.operation_id
-    assert first.identity.delivery_id == DeliveryId("delivery/operation/refund-001/1")
-    assert first.identity.attempt_id == AttemptId("attempt/operation/refund-001/1")
+    assert first.identity.delivery_id == DeliveryId("delivery/operation/refund-001/perturbed/1")
+    assert first.identity.attempt_id == AttemptId("attempt/operation/refund-001/perturbed/1")
     assert first.outcome == "provider_result_lost"
     assert first.returned_result is None
     assert first.observation.refunded_minor_units == 2_500
@@ -203,8 +203,8 @@ def test_lost_provider_result_causes_a_duplicate_refund() -> None:
     )
 
     assert second.identity.operation_id == run.operation_id
-    assert second.identity.delivery_id == DeliveryId("delivery/operation/refund-001/2")
-    assert second.identity.attempt_id == AttemptId("attempt/operation/refund-001/2")
+    assert second.identity.delivery_id == DeliveryId("delivery/operation/refund-001/perturbed/2")
+    assert second.identity.attempt_id == AttemptId("attempt/operation/refund-001/perturbed/2")
     assert second.outcome == "returned"
     assert second.returned_result == _RefundReceipt("refund/2", _REFUND_MINOR_UNITS)
     assert second.observation.refunded_minor_units == 5_000
@@ -215,8 +215,8 @@ def test_lost_provider_result_causes_a_duplicate_refund() -> None:
 
     assert run.harness.boundary_name == "provider_result_delivery"
     assert run.harness.reached_attempt_ids == (
-        AttemptId("attempt/operation/refund-001/1"),
-        AttemptId("attempt/operation/refund-001/2"),
+        AttemptId("attempt/operation/refund-001/perturbed/1"),
+        AttemptId("attempt/operation/refund-001/perturbed/2"),
     )
     assert run.harness.injected_attempt_id == first.identity.attempt_id
     assert run.harness.undelivered_result == _RefundReceipt("refund/1", _REFUND_MINOR_UNITS)
@@ -268,7 +268,7 @@ def test_boundary_not_reached_stops_without_retry() -> None:
             observe=observe,
         )
 
-    assert error.value.identity.attempt_id == AttemptId("attempt/operation/refund-001/1")
+    assert error.value.identity.attempt_id == AttemptId("attempt/operation/refund-001/perturbed/1")
     assert invocations == 1
     assert observations == 1
 
@@ -294,7 +294,7 @@ def test_caught_fault_signal_stops_without_retry() -> None:
             observe=lambda: 0,
         )
 
-    assert error.value.identity.attempt_id == AttemptId("attempt/operation/refund-001/1")
+    assert error.value.identity.attempt_id == AttemptId("attempt/operation/refund-001/perturbed/1")
     assert invocations == 1
 
 

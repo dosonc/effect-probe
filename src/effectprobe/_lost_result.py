@@ -31,10 +31,18 @@ class AttemptId:
 
 
 @dataclass(frozen=True, slots=True)
+class TrialId:
+    """Harness identity for one clean or perturbed trial."""
+
+    value: str
+
+
+@dataclass(frozen=True, slots=True)
 class AttemptIdentity:
     """The distinct identities associated with one subject invocation."""
 
     operation_id: OperationId
+    trial_id: TrialId
     delivery_id: DeliveryId
     attempt_id: AttemptId
 
@@ -67,6 +75,7 @@ class RunEvidence[ResultT, ObservationT]:
     """Immutable evidence for the supported two-attempt schedule."""
 
     operation_id: OperationId
+    trial_id: TrialId
     baseline: ObservationT
     attempts: tuple[AttemptEvidence[ResultT, ObservationT], ...]
     harness: HarnessEvidence[ResultT]
@@ -101,6 +110,9 @@ class _ProviderResultLost(Exception):
 
 type DeliverResult[ResultT] = Callable[[ResultT], ResultT]
 type InvokeSubject[ResultT] = Callable[[DeliverResult[ResultT]], ResultT]
+
+_MISSING_BASELINE = object()
+_DEFAULT_TRIAL_ID = TrialId("perturbed")
 
 
 class _ResultDeliveryController[ResultT]:
@@ -149,13 +161,14 @@ class _ResultDeliveryController[ResultT]:
         return deliver
 
 
-def _identity_for(operation_id: OperationId, ordinal: int) -> AttemptIdentity:
+def identity_for(operation_id: OperationId, trial_id: TrialId, ordinal: int) -> AttemptIdentity:
     """Derive deterministic, domain-separated structural identities."""
 
     return AttemptIdentity(
         operation_id=operation_id,
-        delivery_id=DeliveryId(f"delivery/{operation_id.value}/{ordinal}"),
-        attempt_id=AttemptId(f"attempt/{operation_id.value}/{ordinal}"),
+        trial_id=trial_id,
+        delivery_id=DeliveryId(f"delivery/{operation_id.value}/{trial_id.value}/{ordinal}"),
+        attempt_id=AttemptId(f"attempt/{operation_id.value}/{trial_id.value}/{ordinal}"),
     )
 
 
@@ -164,6 +177,8 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
     operation_id: OperationId,
     invoke: InvokeSubject[ResultT],
     observe: Callable[[], ObservationT],
+    trial_id: TrialId = _DEFAULT_TRIAL_ID,
+    baseline: ObservationT | object = _MISSING_BASELINE,
 ) -> RunEvidence[ResultT, ObservationT]:
     """Run one invocation, lose its provider result, and retry exactly once.
 
@@ -172,9 +187,11 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
     implicit domain idempotency key.
     """
 
-    baseline = observe()
+    recorded_baseline = (
+        observe() if baseline is _MISSING_BASELINE else cast("ObservationT", baseline)
+    )
     controller = _ResultDeliveryController[ResultT]()
-    first_identity = _identity_for(operation_id, 1)
+    first_identity = identity_for(operation_id, trial_id, 1)
 
     try:
         invoke(controller.delivery_for(first_identity.attempt_id))
@@ -185,7 +202,7 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
             raise FaultNotPropagated(first_identity)
         raise BoundaryNotReached(first_identity)
 
-    second_identity = _identity_for(operation_id, 2)
+    second_identity = identity_for(operation_id, trial_id, 2)
     subject_result = invoke(controller.delivery_for(second_identity.attempt_id))
     final_observation = observe()
 
@@ -209,7 +226,8 @@ def run_commit_then_lose_first_provider_result[ResultT, ObservationT](
     )
     return RunEvidence(
         operation_id=operation_id,
-        baseline=baseline,
+        trial_id=trial_id,
+        baseline=recorded_baseline,
         attempts=(first_attempt, second_attempt),
         harness=harness_evidence,
         subject_result=subject_result,

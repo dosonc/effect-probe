@@ -28,10 +28,9 @@ subject forwards that key to a deduplicating fake provider and produces
 append-only history, and distinct operation, trial, delivery, attempt, and subject
 key identities.
 
-This kernel is deliberately private and its provisional scope is not reportable:
-environment, code, and version fingerprints are deferred. The examples demonstrate
-the testing semantics against a harness-controlled provider; they do not validate
-the behavior of a production payment provider.
+This kernel is deliberately private and its provisional scope is not reportable.
+The examples demonstrate the testing semantics against a harness-controlled
+provider; they do not validate the behavior of a production payment provider.
 
 The current private transport slice runs the same vulnerable and keyed comparison
 through a trusted local MCP stdio server. It preflights the declared tool capability,
@@ -41,6 +40,18 @@ provide current state and append-only committed history; MCP request identities 
 recorded separately and are never treated as logical operations or domain keys. This
 slice still does not expose a usable fault-injection API, CLI, stable verdict/report
 schema, or general MCP-server integration.
+
+The controlled MCP comparison can now be recorded in a private, versioned evidence
+artifact. It keeps subject-visible results separate from harness, observer, and
+transport truth; applies a deny-by-default redaction policy; and includes explicit
+source, dependency-lock, runtime, contract, observer, schedule, and schema
+compatibility descriptors. Private replay executes only the registered local refund
+case and refuses detected drift before preflight or world provisioning. A compatible
+replay evaluates a fresh run and records whether its canonical evidence reproduced
+the source artifact. The artifact schema and replay registry remain experimental:
+there is no public facade, stable CLI or report format, schema migration promise,
+third-party artifact support, or compatibility claim beyond the enumerated
+descriptor.
 
 ## Design documentation
 

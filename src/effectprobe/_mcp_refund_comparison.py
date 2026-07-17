@@ -18,7 +18,11 @@ from effectprobe._mcp_refund_store import (
     observe_refunds,
     read_mcp_deliveries,
 )
-from effectprobe._mcp_stdio import McpStdioToolClient, McpStdioToolConfig, preflight_mcp_tool
+from effectprobe._mcp_stdio import (
+    McpStdioToolClient,
+    McpStdioToolConfig,
+    preflight_mcp_tool,
+)
 from effectprobe._refund_comparison import RefundCommand, RefundReceipt, RefundState
 from effectprobe._semantic_kernel import (
     CaseDefinition,
@@ -87,6 +91,7 @@ class McpRefundWorldRecord:
 
     trial_id: TrialId
     database_path: Path
+    protocol_version: str | None = None
     deliveries: tuple[McpDelivery, ...] = ()
     cleaned: bool = False
     database_removed: bool = False
@@ -100,6 +105,7 @@ class McpRefundWorldTracker:
     preflight_attempts: int = 0
     provision_attempts: int = 0
     cleanup_attempts: int = 0
+    preflight_protocol_version: str | None = None
 
 
 def mcp_refund_server_config(
@@ -250,7 +256,8 @@ def build_mcp_refund_case(
             timeout_seconds=preflight_timeout_seconds,
             command=preflight_command,
         )
-        preflight_mcp_tool(config)
+        evidence = preflight_mcp_tool(config)
+        tracker.preflight_protocol_version = evidence.protocol_version
 
     def world_factory(
         trial_id: TrialId,
@@ -279,6 +286,7 @@ def build_mcp_refund_case(
                     )
                 )
             )
+            record.protocol_version = client.protocol_version
 
             def invoke(
                 input_value: RefundCommand,
@@ -360,7 +368,9 @@ def build_mcp_refund_case(
             "private provisional MCP stdio outcome",
             "trusted local harness-controlled server and SQLite provider",
             "MCP request identity is transport evidence, not a domain operation key",
-            "code, dependency, runtime, environment, and evidence-schema fingerprints are deferred",
+            "private experimental evidence schema and replay registry",
+            "compatibility covers only the enumerated runtime and environment dimensions",
+            "unmodelled host state remains unknown",
         ),
         schedule=MCP_CLIENT_RESULT_LOSS,
         preflight=preflight,

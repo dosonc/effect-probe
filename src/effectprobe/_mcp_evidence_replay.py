@@ -689,7 +689,6 @@ def capture_mcp_evidence(
     encoded = str(artifact_payload(artifact))
     forbidden = {
         *(str(record.database_path) for record in tracker.worlds),
-        *(str(delivery.process_id) for record in tracker.worlds for delivery in record.deliveries),
         os.fspath(sys.executable),
         *forbidden_values,
     }

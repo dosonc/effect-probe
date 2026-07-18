@@ -38,6 +38,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
   "commitizen>=4.16.4,<5",
+  "hypothesis>=6.156.6,<7",
   "pre-commit>=4.6.0,<5",
   "pyright>=1.1.411,<2",
   "pytest>=9.1.1,<10",

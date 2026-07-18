@@ -53,6 +53,15 @@ there is no public facade, stable CLI or report format, schema migration promise
 third-party artifact support, or compatibility claim beyond the enumerated
 descriptor.
 
+The private semantic core also has deterministic property-based regression checks
+for identity separation, append-only history, evidence sufficiency, failure
+confirmation, axis precedence, fresh-world baselines, and cleanup. These bounded
+generated model examples supplement the concrete refund and MCP cases; they are not
+exhaustive verification or a public input-generation API. Adding the test-only
+dependency changes the conservative private replay descriptor, so artifacts
+recorded against the previous dependency lock are intentionally incompatible with
+verified replay under the new lock.
+
 ## Design documentation
 
 - [Alpha claim boundaries](docs/claim-boundaries.md) defines the permitted meaning
@@ -74,7 +83,8 @@ descriptor.
 - `PASS`, `FAIL`, `INCONCLUSIVE`, and `ERROR` invariant verdicts, plus explicit
   `UNVERIFIED` clean validity when no clean assertions were declared.
 - Strict replay from explicitly replayable artifacts under a compatible environment.
-- Experimental property-generated inputs and LangGraph checkpoint/resume support.
+- Property-based regression coverage for the private semantic core; user-configured
+  generated inputs and LangGraph checkpoint/resume support remain planned.
 - Local and CI execution without LLM calls, paid APIs, or production credentials.
 
 ## Scope and safety boundaries

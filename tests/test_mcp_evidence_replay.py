@@ -106,6 +106,20 @@ def _array(value: JsonValue) -> list[JsonValue]:
     return value
 
 
+def _object_keys(value: JsonValue) -> set[str]:
+    keys: set[str] = set()
+    if isinstance(value, dict):
+        keys.update(value)
+        children = value.values()
+    elif isinstance(value, list):
+        children = value
+    else:
+        return keys
+    for item in children:
+        keys.update(_object_keys(item))
+    return keys
+
+
 def _canonical_raw(payload: dict[str, JsonValue]) -> bytes:
     return (
         json.dumps(
@@ -202,11 +216,27 @@ def test_artifact_is_deterministic_redacted_and_not_public(recorded: _Recorded) 
     assert artifact_payload(first.artifact) == artifact_payload(second)
     content = recorded.keyed.read_text(encoding="utf-8")
     assert os.fspath(sys.executable) not in content
+    assert "process_id" not in _object_keys(artifact_payload(first.artifact))
     for world in recorded.keyed_evaluation.tracker.worlds:
         assert os.fspath(world.database_path) not in content
-        for delivery in world.deliveries:
-            assert str(delivery.process_id) not in content
     assert __all__ == ("__version__",)
+
+
+def test_process_identifier_value_collision_is_not_a_redaction_leak(
+    keyed_evaluation: _Evaluation,
+) -> None:
+    tracker = copy.deepcopy(keyed_evaluation.tracker)
+    for world in tracker.worlds:
+        world.deliveries = tuple(
+            replace(delivery, process_id=2_500) for delivery in world.deliveries
+        )
+
+    artifact = capture_mcp_evidence(mode="keyed", result=keyed_evaluation.result, tracker=tracker)
+    payload = artifact_payload(artifact)
+    content = _canonical_raw(payload).decode()
+
+    assert '"amount_minor_units":2500' in content
+    assert "process_id" not in _object_keys(payload)
 
 
 def test_error_messages_are_redacted_and_forbidden_value_scan_fails_closed(

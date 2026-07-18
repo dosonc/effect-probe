@@ -49,6 +49,13 @@ class McpPreflightError(McpStdioError):
 
 
 @dataclass(frozen=True, slots=True)
+class McpPreflightEvidence:
+    """Allowlisted protocol evidence from one disposable initialized session."""
+
+    protocol_version: str
+
+
+@dataclass(frozen=True, slots=True)
 class McpStdioToolConfig:
     """Private configuration for one trusted local MCP stdio tool."""
 
@@ -153,6 +160,7 @@ class McpStdioToolClient:
         self._portal: BlockingPortal | None = None
         self._session: ClientSession | None = None
         self._stderr: TextIO | None = None
+        self._protocol_version: str | None = None
 
     def __enter__(self) -> "McpStdioToolClient":
         stack = ExitStack()
@@ -177,7 +185,7 @@ class McpStdioToolClient:
                     )
                 )
             )
-            portal.call(session.initialize)
+            initialization = portal.call(session.initialize)
         except Exception as error:
             try:
                 stack.close()
@@ -187,7 +195,16 @@ class McpStdioToolClient:
         self._stderr = stderr
         self._portal = portal
         self._session = session
+        self._protocol_version = str(initialization.protocolVersion)
         return self
+
+    @property
+    def protocol_version(self) -> str:
+        """Return the revision negotiated by the active initialized session."""
+
+        if self._protocol_version is None:
+            raise McpLifecycleError("use", RuntimeError("MCP stdio client is not active"))
+        return self._protocol_version
 
     def validate_capabilities(self) -> None:
         """Require the configured tool contract from the initialized server."""
@@ -233,6 +250,7 @@ class McpStdioToolClient:
         self._portal = None
         self._session = None
         self._stderr = None
+        self._protocol_version = None
         if stack is None:
             return
         try:
@@ -241,11 +259,12 @@ class McpStdioToolClient:
             raise McpLifecycleError("cleanup", error) from error
 
 
-def preflight_mcp_tool(config: McpStdioToolConfig) -> None:
+def preflight_mcp_tool(config: McpStdioToolConfig) -> McpPreflightEvidence:
     """Probe MCP capabilities without creating an evaluative effect world."""
 
     try:
         with McpStdioToolClient(config) as client:
             client.validate_capabilities()
+            return McpPreflightEvidence(protocol_version=client.protocol_version)
     except McpStdioError as error:
         raise McpPreflightError(error) from error

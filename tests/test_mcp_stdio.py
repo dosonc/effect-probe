@@ -26,6 +26,7 @@ from effectprobe._mcp_stdio import (
     McpCapabilityError,
     McpLifecycleError,
     McpPreflightError,
+    McpPreflightEvidence,
     McpResultError,
     McpStdioToolClient,
     McpStdioToolConfig,
@@ -54,9 +55,10 @@ def test_mcp_preflight_accepts_the_declared_tool_contract_without_effect_state(
     database = tmp_path / "must-not-be-created.sqlite3"
     config = _preflight_config(database=database)
 
-    preflight_mcp_tool(config)
+    evidence = preflight_mcp_tool(config)
 
     assert not database.exists()
+    assert evidence.protocol_version == "2025-11-25"
 
 
 @pytest.mark.parametrize(
@@ -232,8 +234,8 @@ def test_actual_mcp_client_cleanup_error_is_mapped_after_resources_close(
         original_exit(client, *exc_info)
         raise McpLifecycleError("cleanup", RuntimeError("configured client cleanup failure"))
 
-    def skip_preflight(_config: McpStdioToolConfig) -> None:
-        return
+    def skip_preflight(_config: McpStdioToolConfig) -> McpPreflightEvidence:
+        return McpPreflightEvidence(protocol_version="2025-11-25")
 
     monkeypatch.setattr(mcp_comparison, "preflight_mcp_tool", skip_preflight)
     monkeypatch.setattr(

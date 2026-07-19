@@ -28,9 +28,11 @@ subject forwards that key to a deduplicating fake provider and produces
 append-only history, and distinct operation, trial, delivery, attempt, and subject
 key identities.
 
-This kernel is deliberately private and its provisional scope is not reportable.
-The examples demonstrate the testing semantics against a harness-controlled
-provider; they do not validate the behavior of a production payment provider.
+This kernel is deliberately private, and its raw in-memory result remains
+non-reportable because it does not carry the complete code, dependency, runtime,
+redaction, and cleanup scope. The examples demonstrate the testing semantics
+against a harness-controlled provider; they do not validate the behavior of a
+production payment provider.
 
 The current private transport slice runs the same vulnerable and keyed comparison
 through a trusted local MCP stdio server. It preflights the declared tool capability,
@@ -38,7 +40,7 @@ keeps one managed subprocess alive across the perturbed calls, and loses the fir
 validated client result at an explicit cooperative boundary. Fresh SQLite worlds
 provide current state and append-only committed history; MCP request identities are
 recorded separately and are never treated as logical operations or domain keys. This
-slice still does not expose a usable fault-injection API, CLI, stable verdict/report
+slice still does not expose a usable fault-injection API, CLI, stable public report
 schema, or general MCP-server integration.
 
 The controlled MCP comparison can now be recorded in a private, versioned evidence
@@ -52,6 +54,18 @@ the source artifact. The artifact schema and replay registry remain experimental
 there is no public facade, stable CLI or report format, schema migration promise,
 third-party artifact support, or compatibility claim beyond the enumerated
 descriptor.
+
+A completed artifact from the registered controlled MCP refund case can now be
+projected into private terminal, canonical JSON, and JUnit reports. Report
+eligibility begins only after capture validates the registered scope, schedule,
+identity separation, append-only history, confirmation evidence, resource cleanup,
+compatibility fingerprint, and redaction policy. The reports preserve separate
+`clean_validity` and `retry_safety` axes and retain the bounded code, dependency,
+runtime, environment, observer, and contract scope; they never emit an EffectProbe
+overall verdict. The report formats and Python helpers remain experimental and
+private, with no CLI, file-output contract, or third-party compatibility promise.
+Artifacts from the prior private runner remain inspectable but are non-reportable
+and refuse exact replay against the new runner version.
 
 The private semantic core also has deterministic property-based regression checks
 for identity separation, append-only history, evidence sufficiency, failure
@@ -83,6 +97,8 @@ verified replay under the new lock.
 - `PASS`, `FAIL`, `INCONCLUSIVE`, and `ERROR` invariant verdicts, plus explicit
   `UNVERIFIED` clean validity when no clean assertions were declared.
 - Strict replay from explicitly replayable artifacts under a compatible environment.
+- Private terminal, JSON, and JUnit projections for fully captured registered MCP
+  evidence; a user-facing facade and stable CLI remain planned.
 - Property-based regression coverage for the private semantic core; user-configured
   generated inputs and LangGraph checkpoint/resume support remain planned.
 - Local and CI execution without LLM calls, paid APIs, or production credentials.

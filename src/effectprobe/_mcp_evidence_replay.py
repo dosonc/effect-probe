@@ -62,7 +62,7 @@ type McpRun = Callable[[McpEvidenceMode], tuple[McpRefundCaseResult, McpRefundWo
 _SCHEMA_NAME = "effectprobe.private.evidence"
 _SCHEMA_VERSION = 1
 _RUNNER_ID = "effectprobe.private.mcp-evidence-replay"
-_RUNNER_VERSION = 1
+_RUNNER_VERSION = 2
 _REGISTRY_ID = "effectprobe.private.mcp-refund"
 _CASE_VERSION = 1
 _REDACTION_ID = "effectprobe.private.redaction/mcp-refund-v1"
@@ -103,6 +103,7 @@ _RUNNER_FILES = (
     "src/effectprobe/_refund_comparison.py",
     "src/effectprobe/_evidence_artifact.py",
     "src/effectprobe/_mcp_evidence_replay.py",
+    "src/effectprobe/_mcp_reports.py",
 )
 _ALLOWED_EXPLANATIONS = frozenset(
     {
@@ -608,7 +609,10 @@ def _scope(result: McpRefundCaseResult, mode: McpEvidenceMode) -> dict[str, Json
             "provenance": coverage.provenance,
             "limitations": list(coverage.limitations),
         },
-        "reportable": result.scope.reportable,
+        # Raw semantic results remain deliberately non-reportable. Successful
+        # capture is the promotion boundary because it has now checked the full
+        # compatibility descriptor, cleanup evidence, and redaction policy.
+        "reportable": True,
         "limitations": list(result.scope.limitations),
     }
 
@@ -686,6 +690,15 @@ def capture_mcp_evidence(
         ),
     }
     artifact = evidence_artifact_from_payload(payload, validator=validate_mcp_artifact)
+    # Report eligibility is narrower than artifact validity. Keep error or otherwise
+    # inconsistent evidence inspectable, but do not promote it to a report source.
+    from effectprobe._mcp_reports import McpReportInputError, validate_reportable_mcp_artifact
+
+    try:
+        validate_reportable_mcp_artifact(artifact)
+    except McpReportInputError:
+        require_object(payload["scope"], "artifact.scope")["reportable"] = False
+        artifact = evidence_artifact_from_payload(payload, validator=validate_mcp_artifact)
     encoded = str(artifact_payload(artifact))
     forbidden = {
         *(str(record.database_path) for record in tracker.worlds),

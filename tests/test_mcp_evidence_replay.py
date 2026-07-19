@@ -250,11 +250,13 @@ def test_error_messages_are_redacted_and_forbidden_value_scan_fails_closed(
     result = replace(keyed_evaluation.result, primary=primary)
 
     artifact = capture_mcp_evidence(mode="keyed", result=result, tracker=keyed_evaluation.tracker)
-    text = str(artifact_payload(artifact))
+    payload = artifact_payload(artifact)
+    text = str(payload)
 
     assert secret not in text
     assert "SecretError" in text
     assert "message_redacted" in text
+    assert _object(payload["scope"])["reportable"] is False
     with pytest.raises(McpEvidenceCaptureError, match="forbidden"):
         capture_mcp_evidence(
             mode="keyed",
@@ -323,8 +325,8 @@ def _mutate_compatibility(payload: dict[str, JsonValue], dimension: str) -> None
         component = _object(_array(_object(compatibility["subject"])["components"])[0])
         component["sha256"] = "0" * 64
     elif dimension == "runner":
-        _object(compatibility["runner"])["version"] = 2
-        _object(payload["producer"])["version"] = 2
+        _object(compatibility["runner"])["version"] = 3
+        _object(payload["producer"])["version"] = 3
     elif dimension == "lock":
         _object(compatibility["dependencies"])["lock_sha256"] = "0" * 64
     elif dimension == "distribution":

@@ -26,6 +26,9 @@ dependencies = [
     "mcp>=1.28.1,<2",
 ]
 
+[project.scripts]
+effectprobe = "effectprobe._cli:main"
+
 [project.urls]
 Documentation = "https://github.com/dosonc/effect-probe#readme"
 Issues = "https://github.com/dosonc/effect-probe/issues"

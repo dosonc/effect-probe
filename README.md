@@ -3,9 +3,11 @@
 Deterministic external-effect testing for retryable tools and durable agents.
 
 > **Status: pre-alpha.** EffectProbe is under active development. There is no
-> usable fault-injection API or CLI yet. The public API, evidence schema, and
-> compatibility guarantees are not stable, and the capabilities described as
-> planned below are targets for the first alpha rather than current features.
+> general fault-injection API yet. One bounded installed command is available for
+> the registered controlled MCP refund case. The public Python API, evidence and
+> report schemas, and compatibility guarantees are not stable, and the broader
+> capabilities described as planned below are targets for the first alpha rather
+> than current features.
 
 A timeout does not prove that a tool did nothing. An external effect may commit
 successfully while its result is lost, causing retry or checkpoint resume to
@@ -40,8 +42,8 @@ keeps one managed subprocess alive across the perturbed calls, and loses the fir
 validated client result at an explicit cooperative boundary. Fresh SQLite worlds
 provide current state and append-only committed history; MCP request identities are
 recorded separately and are never treated as logical operations or domain keys. This
-slice still does not expose a usable fault-injection API, CLI, stable public report
-schema, or general MCP-server integration.
+slice still does not expose a general fault-injection API, stable public report
+schema, or arbitrary MCP-server integration.
 
 The controlled MCP comparison can now be recorded in a private, versioned evidence
 artifact. It keeps subject-visible results separate from harness, observer, and
@@ -50,10 +52,11 @@ source, dependency-lock, runtime, contract, observer, schedule, and schema
 compatibility descriptors. Private replay executes only the registered local refund
 case and refuses detected drift before preflight or world provisioning. A compatible
 replay evaluates a fresh run and records whether its canonical evidence reproduced
-the source artifact. The artifact schema and replay registry remain experimental:
-there is no public facade, stable CLI or report format, schema migration promise,
-third-party artifact support, or compatibility claim beyond the enumerated
-descriptor.
+the source artifact. The artifact schema and replay registry remain experimental.
+The installed command described below is a bounded facade over this registered
+case; it does not make those private representations public contracts or add a
+schema migration, third-party artifact, or compatibility promise beyond the
+enumerated descriptor.
 
 A completed artifact from the registered controlled MCP refund case can now be
 projected into private terminal, canonical JSON, and JUnit reports. Report
@@ -63,9 +66,11 @@ compatibility fingerprint, and redaction policy. The reports preserve separate
 `clean_validity` and `retry_safety` axes and retain the bounded code, dependency,
 runtime, environment, observer, and contract scope; they never emit an EffectProbe
 overall verdict. The report formats and Python helpers remain experimental and
-private, with no CLI, file-output contract, or third-party compatibility promise.
-Artifacts from the prior private runner remain inspectable but are non-reportable
-and refuse exact replay against the new runner version.
+private. The installed command can emit these projections to stdout or an
+exclusively created file, but their exact terminal wording and JSON/XML shapes are
+not stable third-party contracts. Artifacts from the prior private runner remain
+inspectable but are non-reportable and refuse exact replay against the new runner
+version.
 
 The private semantic core also has deterministic property-based regression checks
 for identity separation, append-only history, evidence sufficiency, failure
@@ -75,6 +80,52 @@ exhaustive verification or a public input-generation API. Adding the test-only
 dependency changes the conservative private replay descriptor, so artifacts
 recorded against the previous dependency lock are intentionally incompatible with
 verified replay under the new lock.
+
+## Controlled MCP command
+
+The installed facade runs only the trusted, harness-controlled SQLite MCP refund
+fixture. It does not accept arbitrary MCP servers, executables, environments,
+observers, or contracts.
+
+Record and report one keyed run:
+
+```bash
+uv run --locked effectprobe run controlled-mcp-refund \
+  --mode keyed \
+  --artifact keyed-evidence.json
+```
+
+Render an eligible artifact without executing a subject:
+
+```bash
+uv run --locked effectprobe report keyed-evidence.json --format json
+```
+
+Strictly replay a compatible artifact into a fresh child and write a JUnit report:
+
+```bash
+uv run --locked effectprobe replay keyed-evidence.json \
+  --artifact replay-evidence.json \
+  --format junit \
+  --output replay-report.xml
+```
+
+`--output -` is the default and emits exactly the selected report on stdout. File
+destinations must not already exist and are never overwritten. Evidence artifacts
+cannot use stdin or stdout.
+
+Command exit status describes the requested operation, not the subject: `0` means
+the artifact/report operation completed even if an axis is `FAIL`, `INCONCLUSIVE`,
+`ERROR`, or `UNVERIFIED`, and even if compatible replay records a reproduction
+mismatch. Operational failure is `1`, invalid command use is `2`, and an
+interrupted command is `130`. Automation should consume the separate
+`clean_validity` and `retry_safety` axes or the JUnit cases rather than treating the
+process status as an overall verdict.
+
+These commands run trusted local test code and can start local subprocesses. The
+result applies only to the recorded built-in subject, input, environment, observer,
+contract, and failure schedule; passing the keyed fixture does not validate a
+production payment provider.
 
 ## Design documentation
 
@@ -97,8 +148,9 @@ verified replay under the new lock.
 - `PASS`, `FAIL`, `INCONCLUSIVE`, and `ERROR` invariant verdicts, plus explicit
   `UNVERIFIED` clean validity when no clean assertions were declared.
 - Strict replay from explicitly replayable artifacts under a compatible environment.
-- Private terminal, JSON, and JUnit projections for fully captured registered MCP
-  evidence; a user-facing facade and stable CLI remain planned.
+- A bounded installed facade for running, reporting, and strictly replaying the
+  registered controlled MCP refund case; generic configuration and stable public
+  report schemas remain planned.
 - Property-based regression coverage for the private semantic core; user-configured
   generated inputs and LangGraph checkpoint/resume support remain planned.
 - Local and CI execution without LLM calls, paid APIs, or production credentials.

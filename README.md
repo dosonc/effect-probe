@@ -129,6 +129,12 @@ production payment provider.
 
 ## Design documentation
 
+- [Controlled MCP tutorial](docs/tutorial.md) walks through the installed unsafe
+  and keyed cases, data-only reporting, strict replay, and axis interpretation.
+- [Threat model](docs/threat-model.md) defines the trusted-local security boundary,
+  addressed threats, exclusions, and residual risks.
+- [Current limitations](docs/limitations.md) separates shipped behavior from
+  planned alpha semantics and lists conclusions the current evidence cannot support.
 - [Alpha claim boundaries](docs/claim-boundaries.md) defines the permitted meaning
   of verdicts and the evidence scope required for every evaluative conclusion.
 - [ADR-0001](docs/adr/0001-alpha-scope-and-claim-boundaries.md) records why the alpha

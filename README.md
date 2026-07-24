@@ -81,6 +81,13 @@ dependency changes the conservative private replay descriptor, so artifacts
 recorded against the previous dependency lock are intentionally incompatible with
 verified replay under the new lock.
 
+The private validation suite also exercises the refund comparison through a
+separate controlled file-journal observer. That case derives current state from a
+complete ordered JSON Lines history and reproduces the vulnerable and keyed axis
+outcomes without using the SQLite observer. It is test-only and non-reportable: the
+installed command still runs only the registered SQLite MCP fixture, and there is
+no public or stable observer extension interface.
+
 ## Controlled MCP command
 
 The installed facade runs only the trusted, harness-controlled SQLite MCP refund

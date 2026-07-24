@@ -38,10 +38,18 @@ it does not mean exhaustive real-world failure coverage.
 
 ## Bounded observer coverage
 
-The bundled observer covers named refund state and append-only committed refund
-history in case-provisioned SQLite worlds. It cannot discover or rule out effects on
-unobserved files, databases, services, queues, caches, logs, messages, or other
-systems.
+The installed controlled MCP case bundles an observer for named refund state and
+append-only committed refund history in case-provisioned SQLite worlds. A second
+private, test-only comparison reads complete ordered refund history from a
+case-owned JSON Lines journal and derives current state from that history. It
+validates the private observer seam against a different controlled source, but it
+is not selectable through the installed command and is not eligible for the MCP
+artifact, report, or replay path.
+
+Each observer covers only its declared case-owned surface. Neither can discover or
+rule out effects on unobserved files, databases, services, queues, caches, logs,
+messages, or other systems. The file-journal case also does not test process crashes
+or establish filesystem crash durability.
 
 An at-most-once result for the declared refund surface requires the recorded
 append-only history. Snapshot equality alone cannot establish that no transient
@@ -49,8 +57,8 @@ duplicate occurred. Observer provenance identifies the harness-controlled source
 it does not establish completeness outside that source or transfer the result to a
 production provider.
 
-An additional observer protocol remains deferred. There is no stable third-party
-observer extension interface.
+Both observer implementations remain private. There is no generic configuration or
+stable third-party observer extension interface.
 
 ## Conditional, axis-specific results
 

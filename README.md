@@ -88,6 +88,12 @@ outcomes without using the SQLite observer. It is test-only and non-reportable: 
 installed command still runs only the registered SQLite MCP fixture, and there is
 no public or stable observer extension interface.
 
+The accepted integration direction now makes one documented experimental
+bring-your-own-case path for a trusted local agent a first-alpha release gate. That
+path and its exact attachment contract are not implemented yet. Any later LangGraph
+checkpoint/resume example must consume or validate the same external path instead
+of remaining another repository-only fixture.
+
 ## Controlled MCP command
 
 The installed facade runs only the trusted, harness-controlled SQLite MCP refund
@@ -146,6 +152,9 @@ production payment provider.
   of verdicts and the evidence scope required for every evaluative conclusion.
 - [ADR-0001](docs/adr/0001-alpha-scope-and-claim-boundaries.md) records why the alpha
   deliberately adopts those boundaries.
+- [ADR-0002](docs/adr/0002-langgraph-durable-integration-go-no-go.md) conditionally
+  accepts a bounded LangGraph direction and requires one experimental external case
+  path before the first alpha release.
 
 ## Planned alpha scope
 
@@ -164,6 +173,9 @@ production payment provider.
 - A bounded installed facade for running, reporting, and strictly replaying the
   registered controlled MCP refund case; generic configuration and stable public
   report schemas remain planned.
+- One documented experimental user-defined case path for a trusted local agent is a
+  first-alpha release gate. Its attachment and output contracts remain unfrozen,
+  and it is not part of the current installed command.
 - Property-based regression coverage for the private semantic core; user-configured
   generated inputs and LangGraph checkpoint/resume support remain planned.
 - Local and CI execution without LLM calls, paid APIs, or production credentials.

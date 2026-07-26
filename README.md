@@ -3,11 +3,12 @@
 Deterministic external-effect testing for retryable tools and durable agents.
 
 > **Status: pre-alpha.** EffectProbe is under active development. There is no
-> general fault-injection API yet. One bounded installed command is available for
-> the registered controlled MCP refund case. The public Python API, evidence and
-> report schemas, and compatibility guarantees are not stable, and the broader
-> capabilities described as planned below are targets for the first alpha rather
-> than current features.
+> stable fault-injection API yet. One bounded installed command is available for
+> the registered controlled MCP refund case, and an explicitly unstable Python
+> contract lets trusted local callers define one single-surface case. The Python
+> contract, evidence and report formats, and compatibility guarantees are not
+> stable; broader capabilities described as planned below remain first-alpha
+> targets rather than current features.
 
 A timeout does not prove that a tool did nothing. An external effect may commit
 successfully while its result is lost, causing retry or checkpoint resume to
@@ -86,13 +87,24 @@ separate controlled file-journal observer. That case derives current state from 
 complete ordered JSON Lines history and reproduces the vulnerable and keyed axis
 outcomes without using the SQLite observer. It is test-only and non-reportable: the
 installed command still runs only the registered SQLite MCP fixture, and there is
-no public or stable observer extension interface.
+no stable observer interface. The experimental Python contract separately accepts
+one caller-owned observer surface without making this bundled file-journal seam or
+the private MCP evidence path public.
 
-The accepted integration direction now makes one documented experimental
-bring-your-own-case path for a trusted local agent a first-alpha release gate. That
-path and its exact attachment contract are not implemented yet. Any later LangGraph
-checkpoint/resume example must consume or validate the same external path instead
-of remaining another repository-only fixture.
+The first bring-your-own-case path is now available through
+`effectprobe.experimental`. A trusted caller constructs and runs its own Python
+case without importing private EffectProbe modules. The contract supports one
+concrete input, one optional subject-visible operation key, one named observer
+surface, fresh provision/cleanup sessions, clean and retry contracts,
+applicability, and the cooperative provider-commit/result-loss/retry-once schedule.
+It returns a redacted in-memory projection with separate axes and compatibility
+fingerprints; it does not add an artifact, replay path, dynamic module loader,
+generic MCP command, or stable pre-1.0 interface. Any later LangGraph
+checkpoint/resume example must consume or validate this external path instead of
+remaining another repository-only fixture.
+
+See [Experimental Python cases](docs/experimental-cases.md) for the full attachment
+contract and runnable external JSON Lines example.
 
 ## Controlled MCP command
 
@@ -144,6 +156,9 @@ production payment provider.
 
 - [Controlled MCP tutorial](docs/tutorial.md) walks through the installed unsafe
   and keyed cases, data-only reporting, strict replay, and axis interpretation.
+- [Experimental Python cases](docs/experimental-cases.md) documents the unstable
+  trusted-local case contract, cooperative boundary, fingerprints, redacted
+  result, and runnable external JSON Lines example.
 - [Threat model](docs/threat-model.md) defines the trusted-local security boundary,
   addressed threats, exclusions, and residual risks.
 - [Current limitations](docs/limitations.md) separates shipped behavior from
@@ -173,9 +188,10 @@ production payment provider.
 - A bounded installed facade for running, reporting, and strictly replaying the
   registered controlled MCP refund case; generic configuration and stable public
   report schemas remain planned.
-- One documented experimental user-defined case path for a trusted local agent is a
-  first-alpha release gate. Its attachment and output contracts remain unfrozen,
-  and it is not part of the current installed command.
+- One documented experimental Python case path now lets a trusted local caller run
+  one concrete, single-surface provider-result-loss case without private imports.
+  Its attachment and output contracts remain unfrozen, and it is separate from the
+  registered installed command.
 - Property-based regression coverage for the private semantic core; user-configured
   generated inputs and LangGraph checkpoint/resume support remain planned.
 - Local and CI execution without LLM calls, paid APIs, or production credentials.

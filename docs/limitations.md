@@ -1,9 +1,10 @@
 # Current limitations
 
 EffectProbe is pre-alpha. Its installed command exposes one controlled local case,
-while the normative [alpha claim boundaries](claim-boundaries.md) also describe
-semantics intended for later configurable cases. This document separates the
-behavior available now from those planned boundaries.
+and `effectprobe.experimental` exposes one unstable trusted-local Python case
+contract. The normative [alpha claim boundaries](claim-boundaries.md) also
+describe semantics intended for later, broader configurable cases. This document
+separates the behavior available now from those planned boundaries.
 
 ## One registered case
 
@@ -11,46 +12,51 @@ The current command supports only `controlled-mcp-refund` in `unsafe` and `keyed
 modes. Both use repository-owned trusted subjects, a bundled local MCP stdio server,
 and a harness-controlled SQLite provider.
 
-Users cannot yet configure arbitrary subjects, MCP servers, executables,
+The command still cannot configure arbitrary subjects, MCP servers, executables,
 environments, inputs, contracts, fixtures, observers, operation-key selectors,
 failure schedules, or report implementations. Passing the keyed fixture does not
 validate a production payment provider or another MCP tool.
 
-## External cases are a release gate, not shipped behavior
+## One experimental external Python contract
 
-The first alpha will not be prepared until one documented experimental
-bring-your-own-case path lets an external user run a trusted local agent without
-editing EffectProbe internals. That path must cover subject invocation, concrete
-input and an optional subject-visible operation key, isolated fixture lifecycle,
-declared observers, clean and retry contracts, and one supported cooperative fault
-schedule.
+An external caller can now import `effectprobe.experimental`, construct one trusted
+local case, and run it without editing EffectProbe internals or importing a private
+module. The caller supplies one concrete input, an optional subject-visible
+operation-key selector, fresh provision/cleanup sessions, one named observer
+surface, clean and retry contracts, applicability, selected source and lock files
+for fingerprinting, and the fixed cooperative
+provider-commit/result-loss/retry-once schedule.
 
-This is an accepted direction, not current functionality. The exact
-Python-versus-MCP attachment and output contracts remain unfrozen and require a
-separate approved implementation. A later bounded LangGraph checkpoint/resume
-example must consume or validate the same external path rather than introduce a
-repository-only integration seam. See
+The Python attachment and its immutable in-memory report are explicitly unstable
+before 1.0. There is no dynamic case loader, plugin discovery, generic MCP
+configuration, experimental CLI command, artifact persistence, JSON/JUnit schema,
+or verified replay. The user runs its own trusted module directly. A later bounded
+LangGraph checkpoint/resume example must consume or validate this path rather than
+introduce a repository-only integration seam. See
+[Experimental Python cases](experimental-cases.md) and
 [ADR-0002](adr/0002-langgraph-durable-integration-go-no-go.md).
 
 ## Finite execution envelope
 
-The installed case evaluates:
+The installed case and experimental Python contract each evaluate:
 
 - one logical refund operation;
 - one attempt in each clean trial;
 - no more than two attempts in each perturbed trial;
-- one cooperatively injected MCP client-result loss;
+- one cooperatively injected result loss at their declared boundary;
 - no concurrent schedule exploration.
 
 A candidate contradiction adds two fresh confirmation pairs under the current
 policy; each confirmation repeats those per-trial limits in newly provisioned
 worlds.
 
-It does not currently exercise process termination, checkpoint resume, arbitrary
-crashes, timeouts, network partitions, compensation, multi-tool transactions,
-concurrent histories, or model-based schedule exploration. Determinism here means
-coordinating the supported cooperative fault boundary without sleep-based timing;
-it does not mean exhaustive real-world failure coverage.
+The experimental contract exposes provider-result loss; the installed MCP case
+uses client-result loss. Neither currently exercises process termination,
+checkpoint resume, arbitrary crashes, timeouts, network partitions, compensation,
+multi-tool transactions, concurrent histories, or model-based schedule
+exploration. Determinism here means coordinating the supported cooperative fault
+boundary without sleep-based timing; it does not mean exhaustive real-world
+failure coverage.
 
 ## Bounded observer coverage
 
@@ -73,8 +79,10 @@ duplicate occurred. Observer provenance identifies the harness-controlled source
 it does not establish completeness outside that source or transfer the result to a
 production provider.
 
-Both observer implementations remain private. There is no generic configuration or
-stable third-party observer extension interface.
+The bundled SQLite and file-journal observers remain private. An experimental
+Python case may supply one observer through its public unstable world contract,
+but there is no multiple-surface observer model, generic serialized configuration,
+or stable third-party observer interface.
 
 ## Conditional, axis-specific results
 
@@ -94,25 +102,32 @@ case; it is not statistical evidence or a general reliability estimate.
 
 ## Private evidence and report formats
 
-Evidence artifacts, compatibility descriptors, registry identifiers, terminal
-wording, canonical JSON fields, JUnit structure, and private Python helpers are not
-stable third-party contracts. There is no public JSON Schema, migration framework,
-compatibility override, best-effort replay, or promise that artifacts remain
-replayable across source, dependency, runtime, contract, observer, schedule,
-fixture, producer, or schema changes.
+Controlled MCP evidence artifacts, compatibility descriptors, registry
+identifiers, terminal wording, canonical JSON fields, JUnit structure, and private
+Python helpers are not stable third-party contracts. There is no public JSON
+Schema, migration framework, compatibility override, best-effort replay, or
+promise that artifacts remain replayable across source, dependency, runtime,
+contract, observer, schedule, fixture, producer, or schema changes.
 
 Exact replay refuses detected drift. A compatible replay is a fresh re-execution,
 not a copy of a predetermined result, and it records reproduction match separately
 from the child run's independently evaluated axes. Older artifacts may remain
 inspectable while being ineligible for current reporting or verified replay.
 
+Experimental Python reports are separate immutable in-memory projections. They
+record source, dependency-lock, input, operation-key, contract, observer, runtime,
+and fixed-schedule fingerprints but are not artifacts and cannot be reported or
+replayed by the installed command. Content digests bound scope; they do not encrypt
+low-entropy inputs, sign code, or establish provenance.
+
 ## Trusted-local security model
 
-Subjects and repository code are trusted. EffectProbe is not a security sandbox and
-does not contain malicious code, prevent host access, guarantee termination, or
-isolate production credentials. The installed facade narrows command configuration
-and applies path, redaction, and output controls, but those controls do not create a
-host security boundary.
+Subjects, caller-owned experimental cases, and repository code are trusted.
+EffectProbe is not a security sandbox and does not contain malicious code, prevent
+host access, guarantee termination, or isolate production credentials. The
+installed facade narrows command configuration, while the experimental path makes
+the caller responsible for importing and running its own module. Bounded output,
+fingerprint, and redaction controls do not create a host security boundary.
 
 Use only disposable case-provisioned state and local test inputs. See the
 [threat model](threat-model.md) for addressed threats and residual risks.
@@ -141,5 +156,6 @@ Current results do not establish:
 - behavior under untested inputs, source or dependency changes, integrations,
   schedules, partitions, concurrency, or environments.
 
-Start with the [controlled MCP tutorial](tutorial.md), and use the normative claim
-document when deciding what a particular result is allowed to mean.
+Start with the [controlled MCP tutorial](tutorial.md) or
+[experimental Python case guide](experimental-cases.md), and use the normative
+claim document when deciding what a particular result is allowed to mean.

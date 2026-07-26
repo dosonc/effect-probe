@@ -1,6 +1,7 @@
 """EffectProbe package metadata.
 
-The public fault-injection API has not been implemented yet.
+The stable fault-injection API has not been implemented. The explicitly unstable
+trusted-local case contract lives in :mod:`effectprobe.experimental`.
 """
 
 from importlib.metadata import version as distribution_version

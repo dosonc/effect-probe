@@ -1,9 +1,11 @@
 # Threat model
 
-EffectProbe's current installed command executes one trusted, local, bundled test
-subject against case-provisioned SQLite state. This document explains the security
-and trust boundaries of that path. It does not describe a sandbox or make a claim
-about arbitrary subjects, MCP servers, or production systems.
+EffectProbe's installed command executes one trusted, local, bundled test subject
+against case-provisioned SQLite state. Its experimental Python contract also lets a
+caller run one trusted local case in the caller's own process. This document
+explains the security and trust boundaries of both paths. It does not describe a
+sandbox or make a claim about untrusted subjects, arbitrary MCP servers, or
+production systems.
 
 For the semantic limits on evaluative conclusions, see the normative
 [alpha claim boundaries](claim-boundaries.md). Report suspected vulnerabilities as
@@ -18,15 +20,27 @@ once, observes SQLite state and append-only refund history, attempts cleanup, an
 records private evidence. It may then project eligible evidence as a terminal,
 JSON, or JUnit report.
 
+The experimental Python path does not load a configured module or command. The
+caller imports `effectprobe.experimental`, constructs a typed case in its own
+trusted process, and calls `run_case`. The case provisions fresh worlds, invokes
+its subject adapter, supplies one state/history observer, places the cooperative
+provider-result boundary after commit, evaluates its contracts, and cleans up its
+resources. EffectProbe returns a bounded immutable in-memory projection; this path
+does not write an evidence artifact or support replay.
+
 The actors and components have these trust assumptions:
 
 - The user invoking EffectProbe controls the checkout, command arguments, and
   destination paths.
 - The bundled subject, harness, observer, and MCP server are trusted local code.
+- Caller-owned experimental cases, subject adapters, lifecycle callbacks,
+  observers, canonicalizers, and evaluators are trusted local code with the same
+  host authority as the invoking process.
 - The case-provisioned SQLite files are disposable test state, not production or
   shared state.
-- Evidence and reports are local files controlled by the invoking user. Their
-  formats remain private and experimental.
+- Controlled MCP evidence and reports are local files controlled by the invoking
+  user. Experimental Python reports remain in memory unless the caller chooses to
+  persist or transmit them. All formats and interfaces remain experimental.
 - The operating system, Python runtime, installed dependencies, and repository
   checkout are part of the recorded execution environment, not adversarial
   isolation boundaries.
@@ -49,6 +63,10 @@ within that trusted-local model:
 - **Bounded disclosure:** persisted evidence and diagnostics use explicit
   allowlists and bounded error categories rather than raw exceptions or subprocess
   output.
+- **Experimental projection boundary:** the Python report contains tokenized names,
+  fingerprints, axes, identities, fault proof, cleanup outcomes, and fixed error
+  categories, but omits raw input, operation keys, state, history, results, paths,
+  exception messages, tracebacks, and arbitrary representations.
 
 These properties are implementation goals within the declared scope. They are not
 a general security guarantee.
@@ -82,6 +100,27 @@ This is defense in depth, not a promise that user-selected test inputs are
 non-sensitive. Treat generated artifacts and reports as potentially sensitive local
 test data and inspect them before sharing.
 
+The experimental Python renderer follows the same bounded-output principle. Every
+case-supplied runtime label uses a restricted token grammar, and free-form
+exceptions or evidence values are not projected. Source, dependency-lock, input,
+operation-key, contract, observer, runtime, and schedule values enter the scope as
+digests or fixed descriptors. Digests are not encryption and can disclose guesses
+about low-entropy values; do not use production secrets.
+
+### Trusted-code attachment
+
+EffectProbe does not accept a Python file path, module target, shell command,
+environment override, or plugin entry point for the experimental case. The caller
+is responsible for importing and invoking its own trusted module. This avoids a
+second command-loading surface but does not reduce the authority of that code or
+contain it.
+
+Fingerprint inputs must be caller-selected regular files within bounded sizes.
+Only file contents are retained as digests; paths and contents are not returned.
+The fingerprints cover only the selected source files and dependency lock. They do
+not discover dynamic imports, sign code, establish provenance, or defend against
+concurrent modification.
+
 ### Tampered or incompatible evidence
 
 Artifact readers validate the private schema and registered case shape. Exact
@@ -108,8 +147,8 @@ knowledge and transport identities do not enter its recovery decisions.
 
 EffectProbe does not currently defend against:
 
-- malicious or compromised subjects, plugins, MCP servers, Python dependencies, or
-  repository code;
+- malicious or compromised subjects, caller-owned cases, plugins, MCP servers,
+  Python dependencies, or repository code;
 - filesystem, process, container, kernel, or host escape by executed code;
 - denial of service, resource exhaustion, fork bombs, or intentionally
   non-terminating subjects;
@@ -129,11 +168,12 @@ fully trusted.
 ## Residual risks
 
 The current implementation is pre-alpha. Private redaction rules, compatibility
-descriptors, and output formats may change. Bugs in the harness, observer, cleanup,
-or redaction path can invalidate evidence or disclose data. Files can remain after
-process termination, and completed artifacts intentionally remain after a later
-reporting failure. The single bundled case cannot reveal effects outside its named
-SQLite surfaces.
+descriptors, experimental Python contract, and output formats may change. Bugs in
+the harness, caller callbacks, observer, cleanup, fingerprint, or redaction path can
+invalidate evidence or disclose data. Files can remain after process termination,
+and completed MCP artifacts intentionally remain after a later reporting failure.
+Neither a bundled case nor a single-surface external case can reveal effects outside
+its named observer surface.
 
 An EffectProbe result therefore supports only the bounded semantic statement in the
 [claim-boundary document](claim-boundaries.md). It cannot establish that a subject

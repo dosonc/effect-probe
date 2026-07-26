@@ -229,7 +229,16 @@ that implementation decision without weakening EffectProbe's evidence rules.
 
 ## Status of implementation
 
-This ADR accepts a direction and release gate. It does not ship an external case
-interface, LangGraph support, a dependency, a new fault schedule, or a public
-schema. Until separately approved work is implemented, the installed command
-continues to run only the registered controlled MCP refund case.
+The release-gating external path is implemented by the explicitly unstable
+`effectprobe.experimental` Python contract. A trusted caller can supply one
+concrete input, optional subject-visible operation key, one named observer surface,
+fresh fixture sessions, clean and retry contracts, applicability, fingerprints,
+and the existing cooperative provider-result-loss schedule without private imports
+or internal edits. The result is a redacted in-memory projection, not a persisted
+artifact or stable schema.
+
+This implementation does not add LangGraph support, a dependency, a new fault
+schedule, dynamic code loading, generic MCP configuration, or verified replay. The
+installed command continues to run only the registered controlled MCP refund case.
+The conditional LangGraph implementation decision remains a separate later item
+that must consume or validate this Python contract.

@@ -11,3 +11,4 @@ rewriting their historical decision.
 ## Records
 
 - [ADR-0001: Bound alpha claims](0001-alpha-scope-and-claim-boundaries.md)
+- [ADR-0002: Gate durable integration on an external case path](0002-langgraph-durable-integration-go-no-go.md)

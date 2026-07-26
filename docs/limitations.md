@@ -16,6 +16,22 @@ environments, inputs, contracts, fixtures, observers, operation-key selectors,
 failure schedules, or report implementations. Passing the keyed fixture does not
 validate a production payment provider or another MCP tool.
 
+## External cases are a release gate, not shipped behavior
+
+The first alpha will not be prepared until one documented experimental
+bring-your-own-case path lets an external user run a trusted local agent without
+editing EffectProbe internals. That path must cover subject invocation, concrete
+input and an optional subject-visible operation key, isolated fixture lifecycle,
+declared observers, clean and retry contracts, and one supported cooperative fault
+schedule.
+
+This is an accepted direction, not current functionality. The exact
+Python-versus-MCP attachment and output contracts remain unfrozen and require a
+separate approved implementation. A later bounded LangGraph checkpoint/resume
+example must consume or validate the same external path rather than introduce a
+repository-only integration seam. See
+[ADR-0002](adr/0002-langgraph-durable-integration-go-no-go.md).
+
 ## Finite execution envelope
 
 The installed case evaluates:
